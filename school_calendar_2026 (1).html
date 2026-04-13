@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 학사일정 달력</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c-uni:#4F46E5;--c-uni-bg:#EEF2FF;
+  --c-school:#0891B2;--c-school-bg:#ECFEFF;
+  --bg:#ffffff;--bg2:#f8fafc;--bg3:#f1f5f9;
+  --text:#0f172a;--text2:#475569;--text3:#94a3b8;
+  --border:#e2e8f0;--border2:#cbd5e1;
+}
+html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:960px;margin:0 auto;padding:1.25rem 1rem 3rem}
+
+/* 상단 */
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:10px}
+.header-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cal-title{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.role-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);font-size:12px;font-weight:500;cursor:pointer;background:var(--bg);color:var(--text2);font-family:inherit}
+.role-pill.teacher{background:#EEF2FF;color:#4338CA;border-color:#C7D2FE}
+.role-pill:hover{opacity:.85}
+.rdot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.month-nav{display:flex;align-items:center;gap:6px}
+.month-lbl{font-size:15px;font-weight:600;color:var(--text);min-width:44px;text-align:center}
+.narr{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--text2);font-family:inherit}
+.narr:hover{background:var(--bg3)}
+.btn{padding:7px 14px;border-radius:8px;border:1px solid var(--border2);font-size:12px;cursor:pointer;background:var(--bg);color:var(--text2);font-family:inherit}
+.btn:hover{background:var(--bg3)}
+.btn-primary{background:#4F46E5;color:#fff;border-color:#4F46E5}
+.btn-primary:hover{background:#4338CA}
+.btn-danger{background:#DC2626;color:#fff;border-color:#DC2626}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* 시트 상태 배너 */
+.sheet-bar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg2);margin-bottom:1rem;flex-wrap:wrap}
+.sheet-st{font-size:12px;font-weight:500;color:var(--text2)}
+.sheet-st.ok{color:#065F46}.sheet-st.err{color:#991B1B}.sheet-st.loading{color:#92400E}
+
+/* 범례 */
+.legend{display:flex;gap:14px;margin-bottom:.875rem;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.ldot{width:10px;height:10px;border-radius:2px}
+
+/* 달력 그리드 */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.dow{text-align:center;font-size:11px;font-weight:600;padding:7px 0;color:var(--text3)}
+.cell{min-height:90px;border-radius:8px;border:1px solid var(--border);padding:5px;background:var(--bg);overflow:hidden}
+.cell.empty{background:transparent;border-color:transparent}
+.cell.sun{background:#fff8f8}
+.cell.sat{background:#f8faff}
+.cell.today{border-color:#4F46E5;border-width:2px}
+.cdate{font-size:11px;color:var(--text3);margin-bottom:3px;line-height:1;font-weight:500}
+.cell.today .cdate{color:#4F46E5;font-weight:700}
+.cell.sun .cdate{color:#DC2626}
+.cell.sat .cdate{color:#2563EB}
+.chip{font-size:9.5px;padding:2px 5px;border-radius:3px;margin-bottom:2px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;line-height:1.5;border-left:2.5px solid transparent;transition:filter .1s}
+.chip:hover{filter:brightness(.92)}
+.chip-uni{background:var(--c-uni-bg);color:var(--c-uni);border-left-color:var(--c-uni)}
+.chip-school{background:var(--c-school-bg);color:var(--c-school);border-left-color:var(--c-school)}
+.more{font-size:9px;color:var(--text3);cursor:pointer;padding:1px 3px;display:block}
+.hint{margin-top:8px;font-size:11px;color:var(--text3)}
+
+/* 페이지 */
+.page{display:none}.page.active{display:block}
+.back-btn{background:none;border:none;font-family:inherit;font-size:13px;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:1.25rem;padding:0}
+.back-btn:hover{color:var(--text)}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.25rem}
+.tab{padding:10px 18px;font-size:13px;cursor:pointer;border-bottom:2px solid transparent;color:var(--text2);background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.tab.active{color:#4F46E5;border-bottom-color:#4F46E5;font-weight:600}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.25rem}
+.sc{background:var(--bg2);border-radius:10px;padding:14px;text-align:center;border:1px solid var(--border)}
+.sn{font-size:24px;font-weight:700;color:var(--text)}
+.sl{font-size:11px;color:var(--text3);margin-top:3px}
+.acard{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.875rem 1.125rem;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.acard:hover{border-color:var(--border2)}
+.ai{flex:1;min-width:0}
+.an{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.at{font-size:11px;color:var(--text2)}
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:13px;line-height:1.9}
+
+/* 결과카드 */
+.rcard{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:12px}
+.rcard.cancelled{border-color:#FCA5A5;background:#FFF8F8}
+.rh{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.rn{font-size:14px;font-weight:700;color:var(--text);line-height:1.4}
+.rnum{font-size:10px;color:var(--text3);margin-top:2px}
+.sb-ok{font-size:10px;padding:4px 10px;border-radius:8px;background:#ECFDF5;color:#065F46;white-space:nowrap;flex-shrink:0;font-weight:500}
+.sb-cancel{font-size:10px;padding:4px 10px;border-radius:8px;background:#FEF2F2;color:#991B1B;white-space:nowrap;flex-shrink:0;font-weight:500}
+.rmeta{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-bottom:10px}
+.mr{font-size:11px;display:flex;gap:5px}
+.mk{color:var(--text3);flex-shrink:0}.mv{color:var(--text);font-weight:500}
+.rdiv{border:none;border-top:1px solid var(--border);margin:10px 0}
+.aprow{display:flex;flex-wrap:wrap;gap:14px}
+.api{font-size:11px;display:flex;gap:5px}
+.apk{color:var(--text3)}.apv{color:var(--text);font-weight:600}
+.rca{display:flex;gap:6px;margin-top:10px;justify-content:flex-end}
+
+/* 모달 */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.5);display:flex;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal{background:var(--bg);border-radius:14px;border:1px solid var(--border);padding:1.75rem;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.mcat{font-size:11px;font-weight:600;padding:3px 10px;border-radius:10px;display:inline-block;margin-bottom:10px}
+.mtitle{font-size:18px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.35}
+.mdate{font-size:12px;color:var(--text2);margin-bottom:1rem}
+.mdesc{font-size:13px;color:var(--text);line-height:1.85;margin-bottom:.75rem;white-space:pre-wrap}
+.mnote{font-size:12px;color:var(--text2);padding:8px 11px;border-radius:7px;background:var(--bg2);margin-bottom:.875rem;line-height:1.65;border:1px solid var(--border)}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem}
+.mdivider{border:none;border-top:1px solid var(--border);margin:1rem 0}
+.fl{font-size:11px;color:var(--text2);margin-bottom:5px;display:block;font-weight:600}
+.fi{width:100%;padding:8px 11px;border-radius:8px;border:1px solid var(--border2);font-size:13px;font-family:inherit;color:var(--text);background:var(--bg);margin-bottom:7px}
+.fi:focus{outline:none;border-color:#4F46E5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.fi.err{border-color:#DC2626}
+.ferr{font-size:10px;color:#DC2626;margin:-5px 0 6px;display:none}
+.info-box{background:var(--bg2);border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;gap:24px;border:1px solid var(--border)}
+.ik{font-size:10px;color:var(--text3);margin-bottom:2px}.iv{font-size:13px;font-weight:600;color:var(--text)}
+
+/* PIN */
+.pdots{display:flex;gap:12px;justify-content:center;margin:16px 0}
+.pd{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;transition:all .12s}
+.pd.on{background:var(--text);border-color:var(--text)}
+.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:210px;margin:0 auto}
+.pk{padding:13px;border-radius:9px;border:1px solid var(--border);font-size:16px;cursor:pointer;background:var(--bg);color:var(--text);font-family:inherit;text-align:center}
+.pk:hover{background:var(--bg3)}
+.perr{font-size:11px;color:#DC2626;text-align:center;margin-top:8px;min-height:16px}
+
+@media(max-width:600px){
+  .rmeta{grid-template-columns:1fr}
+  .cal-title{font-size:18px}
+  .cell{min-height:72px}
+  .chip{font-size:8.5px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ── 달력 페이지 ── -->
+<div id="pg-cal" class="page active">
+  <div class="sheet-bar">
+    <span>📋</span>
+    <span class="sheet-st loading" id="sheet-st">학사일정 불러오는 중…</span>
+    <button class="btn btn-sm" onclick="loadSheet()">새로고침</button>
+  </div>
+  <div class="header">
+    <div class="header-left">
+      <div class="cal-title" id="cal-heading">2026년</div>
+      <button class="role-pill" id="role-pill" onclick="handleRole()">
+        <span class="rdot"></span><span id="role-txt">학생 모드</span>
+      </button>
+    </div>
+    <div class="header-right">
+      <div class="month-nav">
+        <button class="narr" onclick="changeMonth(-1)">‹</button>
+        <span class="month-lbl" id="month-lbl">4월</span>
+        <button class="narr" onclick="changeMonth(1)">›</button>
+      </div>
+      <button class="btn btn-primary" onclick="goApply()">신청 현황 →</button>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="ldot" style="background:var(--c-uni)"></div>대학설명회</div>
+    <div class="leg"><div class="ldot" style="background:var(--c-school)"></div>학교행사</div>
+  </div>
+  <div class="cal-grid" id="cal-grid">
+    <div class="dow" style="color:#DC2626">일</div>
+    <div class="dow">월</div><div class="dow">화</div><div class="dow">수</div>
+    <div class="dow">목</div><div class="dow">금</div>
+    <div class="dow" style="color:#2563EB">토</div>
+  </div>
+  <div class="hint">* 표시는 본교 방문 설명회 · 일정을 클릭하면 상세 내용이 표시됩니다.</div>
+</div>
+
+<!-- ── 신청현황 (교사) ── -->
+<div id="pg-apply" class="page">
+  <button class="back-btn" onclick="showPage('pg-cal')">← 달력으로</button>
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(this,'tl')">전체 설명회</button>
+    <button class="tab" onclick="switchTab(this,'ta')">신청 내역</button>
+    <button class="tab" onclick="switchTab(this,'tr')">신청 결과</button>
+  </div>
+  <div id="tl">
+    <div class="stats">
+      <div class="sc"><div class="sn" id="st-t">0</div><div class="sl">전체</div></div>
+      <div class="sc"><div class="sn" id="st-a">0</div><div class="sl">신청 완료</div></div>
+      <div class="sc"><div class="sn" id="st-r">0</div><div class="sl">미신청</div></div>
+    </div>
+    <div id="all-list"></div>
+  </div>
+  <div id="ta" style="display:none"><div id="app-list"></div></div>
+  <div id="tr" style="display:none"><div id="res-list"></div></div>
+</div>
+
+<!-- ── 학생 결과 ── -->
+<div id="pg-sresult" class="page">
+  <button class="back-btn" onclick="showPage('pg-cal')">← 달력으로</button>
+  <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:1.125rem">신청 결과</div>
+  <div id="stu-res-list"></div>
+</div>
+
+</div><!-- .wrap -->
+
+<!-- 이벤트 모달 -->
+<div id="overlay" class="overlay" style="display:none" onclick="closeOverlay(event)">
+  <div class="modal">
+    <div id="m-cat"></div>
+    <div class="mtitle" id="m-title"></div>
+    <div class="mdate" id="m-date"></div>
+    <div id="m-body"></div>
+    <div class="mactions" id="m-actions"></div>
+  </div>
+</div>
+
+<!-- PIN 모달 -->
+<div id="pin-overlay" class="overlay" style="display:none" onclick="closePinOverlay(event)">
+  <div class="modal" style="max-width:280px;text-align:center">
+    <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">교사 로그인</div>
+    <div style="font-size:12px;color:var(--text2)">4자리 비밀번호를 입력하세요</div>
+    <div class="pdots">
+      <div class="pd" id="p0"></div><div class="pd" id="p1"></div>
+      <div class="pd" id="p2"></div><div class="pd" id="p3"></div>
+    </div>
+    <div class="ppad">
+      <button class="pk" onclick="pk('1')">1</button><button class="pk" onclick="pk('2')">2</button><button class="pk" onclick="pk('3')">3</button>
+      <button class="pk" onclick="pk('4')">4</button><button class="pk" onclick="pk('5')">5</button><button class="pk" onclick="pk('6')">6</button>
+      <button class="pk" onclick="pk('7')">7</button><button class="pk" onclick="pk('8')">8</button><button class="pk" onclick="pk('9')">9</button>
+      <button class="pk" onclick="pdel()" style="font-size:11px">지우기</button>
+      <button class="pk" onclick="pk('0')">0</button>
+      <button class="pk" onclick="closePinModal()" style="font-size:11px">취소</button>
+    </div>
+    <div class="perr" id="perr"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════
+//  설정 - 필요시 수정하세요
+// ════════════════════════════════
+const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3W0OaM2zuf1Tn5C5Ep6VJO9AmVNvU0KuulWF3rvapBySv-HixmoHdO9gy6zwkVvCnY2nRDnBz01m/pub?output=csv';
+const PIN = '1234';  // ← 비밀번호 변경 가능
+
+// ════════════════════════════════
+//  상수
+// ════════════════════════════════
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const DOWS   = ['일','월','화','수','목','금','토'];
+
+let isTeacher=false, pinBuf='', pinCb=null;
+let curYear=2026, curMonth=4;
+let applied  = new Map();
+let sheetEvs = [];
+
+// ════════════════════════════════
+//  대학 설명회 데이터
+// ════════════════════════════════
+const UNI = [
+  {id:'u1', name:'가천대학교',              date:'2026-04-27',period:'8~9교시',time:'16:00~17:00',note:'경기 소재 대학'},
+  {id:'u2', name:'국군간호사관학교',         date:'2026-05-21',period:'7교시',  time:'15:00',      note:'특수 목적 대학'},
+  {id:'u3', name:'명지대학교 *',             date:'2026-06-11',period:'7교시',  time:'15:00',      note:'서울/경기 소재 대학'},
+  {id:'u4', name:'백석대학교',               date:'2026-06-12',period:'5교시',  time:'13:00',      note:'충남 천안 소재'},
+  {id:'u5', name:'천안아산지역',             date:'2026-06-12',period:'5~6교시',time:'13:00~14:00',note:'천안·아산 지역 대학'},
+  {id:'u6', name:'한국기술교육대',           date:'2026-06-12',period:'',       time:'13:20~13:40',note:'충남 천안 소재'},
+  {id:'u7', name:'대전·충남·충북 30개 대학',date:'2026-06-12',period:'5~6교시',time:'13:00~14:00',note:'대전·충청 30개 대학 연합'},
+  {id:'u8', name:'우송대학교',               date:'2026-06-12',period:'6교시',  time:'14:00',      note:'대전 소재'},
+  {id:'u9', name:'아주대학교 *',             date:'2026-06-12',period:'6교시',  time:'14:00',      note:'경기 수원 소재'},
+  {id:'u10',name:'경기대학교 *',             date:'2026-06-12',period:'5~6교시',time:'13:00~14:00',note:'경기 수원/서울 소재'},
+  {id:'u11',name:'수도권 3개 대학',          date:'2026-06-12',period:'5교시',  time:'13:00',      note:'수도권 연합 3개 대학'},
+  {id:'u12',name:'한양대학교 *',             date:'2026-06-12',period:'5~6교시',time:'13:00~14:00',note:'서울/ERICA 캠퍼스'},
+  {id:'u13',name:'남서울대학교',             date:'2026-06-12',period:'6교시',  time:'14:00',      note:'충남 천안 소재'},
+  {id:'u14',name:'성신여자대학교 *',         date:'2026-06-12',period:'5~6교시',time:'13:00~14:00',note:'서울 소재'},
+  {id:'u15',name:'강남대학교 *',             date:'2026-06-12',period:'5교시',  time:'13:00',      note:'경기 용인 소재'},
+  {id:'u16',name:'성균관대학교 *',           date:'2026-06-12',period:'5교시',  time:'13:00',      note:'서울/수원 캠퍼스'},
+  {id:'u17',name:'인하대학교 *',             date:'2026-06-12',period:'6교시',  time:'14:00',      note:'인천 소재'},
+  {id:'u18',name:'상명대학교 *',             date:'2026-06-18',period:'7교시',  time:'15:00',      note:'서울/천안 캠퍼스'},
+];
+
+// ════════════════════════════════
+//  CSV 파싱 & 날짜 처리
+// ════════════════════════════════
+function parseCSV(text){
+  return text.trim().split('\n').map(line=>{
+    const cols=[]; let cur='', inQ=false;
+    for(let i=0;i<line.length;i++){
+      const c=line[i];
+      if(c==='"'){ if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ; }
+      else if(c===','&&!inQ){ cols.push(cur.trim()); cur=''; }
+      else cur+=c;
+    }
+    cols.push(cur.trim()); return cols;
+  });
+}
+
+function toISO(raw){
+  if(!raw) return null;
+  const s=raw.trim().replace(/\s/g,'');
+  let m;
+  m=s.match(/^(\d{4})[-.](\d{1,2})[-.](\d{1,2})$/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})\/(\d{1,2})$/);
+  if(m) return `${curYear}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})\.(\d{1,2})$/);
+  if(m) return `${curYear}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  m=s.match(/^(\d{1,2})월(\d{1,2})일?$/);
+  if(m) return `${curYear}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  return null;
+}
+
+function parseDateRange(raw){
+  if(!raw) return null;
+  const parts=raw.includes('~')?raw.split('~'):[raw,raw];
+  const from=toISO(parts[0]);
+  if(!from) return null;
+  return {from, to:toISO(parts[1])||from};
+}
+
+function toCat(gu){
+  if(!gu) return 'school';
+  return (gu.includes('대학')||gu.includes('설명회'))?'uni':'school';
+}
+
+// ════════════════════════════════
+//  구글 시트 로드
+// ════════════════════════════════
+async function loadSheet(){
+  setSt('불러오는 중…','loading');
+  try{
+    const res=await fetch(SHEET_CSV);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    if(text.includes('<html')) throw new Error('시트가 비공개입니다');
+    const rows=parseCSV(text);
+    const start=(rows[0]&&!toISO(rows[0][0]))?1:0;
+    sheetEvs=[];
+    for(let i=start;i<rows.length;i++){
+      const r=rows[i];
+      if(!r[0]||!r[1]) continue;
+      const range=parseDateRange(r[0]);
+      if(!range) continue;
+      sheetEvs.push({
+        id:'sh'+i, dateFrom:range.from, dateTo:range.to,
+        title:(r[1]||'').trim(), content:(r[2]||'').trim(),
+        category:(r[3]||'').trim(), note:(r[4]||'').trim(),
+        cat:toCat(r[3]), chipLabel:(r[1]||'').trim(),
+      });
+    }
+    setSt(`✓ 학사일정 ${sheetEvs.length}개 연결됨`,'ok');
+    buildCal();
+  }catch(e){
+    setSt('연결 실패: '+e.message,'err');
+    sheetEvs=[];
+    buildCal();
+  }
+}
+
+function setSt(msg,cls){
+  const el=document.getElementById('sheet-st');
+  el.textContent=msg; el.className='sheet-st'+(cls?' '+cls:'');
+}
+
+// ════════════════════════════════
+//  날짜별 이벤트 합산
+// ════════════════════════════════
+function eventsOnDate(ds){
+  const uni=UNI.filter(e=>e.date===ds).map(e=>({
+    ...e, cat:'uni', chipLabel:'대학설명회('+e.name+')',
+    dateFrom:e.date, dateTo:e.date,
+    title:'대학설명회('+e.name+')',
+    content:e.note+(e.period?'\n교시: '+e.period:'')+(e.time?'\n시간: '+e.time:''),
+    category:'대학설명회',
+  }));
+  const school=sheetEvs.filter(e=>e.dateFrom<=ds&&ds<=e.dateTo);
+  return [...uni,...school];
+}
+
+// ════════════════════════════════
+//  달력 렌더
+// ════════════════════════════════
+function buildCal(){
+  document.getElementById('cal-heading').textContent=curYear+'년';
+  document.getElementById('month-lbl').textContent=MONTHS[curMonth-1];
+  const grid=document.getElementById('cal-grid');
+  Array.from(grid.children).forEach(c=>{if(!c.classList.contains('dow'))c.remove();});
+  const firstDow=new Date(curYear,curMonth-1,1).getDay();
+  const days=new Date(curYear,curMonth,0).getDate();
+  const todayS=fmt(new Date());
+  for(let i=0;i<firstDow;i++){const c=document.createElement('div');c.className='cell empty';grid.appendChild(c);}
+  for(let d=1;d<=days;d++){
+    const cell=document.createElement('div');
+    const dow=(firstDow+d-1)%7;
+    const ds=`${curYear}-${p2(curMonth)}-${p2(d)}`;
+    let cls='cell';
+    if(dow===0)cls+=' sun'; if(dow===6)cls+=' sat'; if(ds===todayS)cls+=' today';
+    cell.className=cls;
+    const de=document.createElement('div');de.className='cdate';de.textContent=d;cell.appendChild(de);
+    const evs=eventsOnDate(ds);
+    evs.slice(0,3).forEach(ev=>{
+      const chip=document.createElement('span');
+      chip.className='chip '+(ev.cat==='uni'?'chip-uni':'chip-school');
+      chip.textContent=ev.chipLabel; chip.title=ev.chipLabel;
+      chip.onclick=()=>openModal(ev); cell.appendChild(chip);
+    });
+    if(evs.length>3){
+      const m=document.createElement('span');m.className='more';
+      m.textContent=`+${evs.length-3}개`;
+      m.onclick=()=>openDayModal(ds,evs);
+      cell.appendChild(m);
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function changeMonth(d){
+  curMonth+=d;
+  if(curMonth>12){curMonth=1;curYear++;}
+  if(curMonth<1){curMonth=12;curYear--;}
+  buildCal();
+}
+
+// ════════════════════════════════
+//  모달
+// ════════════════════════════════
+function openModal(ev){
+  const isUni=ev.cat==='uni';
+  document.getElementById('m-cat').innerHTML=isUni
+    ?`<span class="mcat" style="background:var(--c-uni-bg);color:var(--c-uni)">대학설명회</span>`
+    :`<span class="mcat" style="background:var(--c-school-bg);color:var(--c-school)">${ev.category||'학교행사'}</span>`;
+  document.getElementById('m-title').textContent=ev.title;
+  const df=new Date(ev.dateFrom+'T00:00:00'),dt=new Date(ev.dateTo+'T00:00:00');
+  document.getElementById('m-date').textContent=ev.dateFrom===ev.dateTo
+    ?`${df.getMonth()+1}월 ${df.getDate()}일 (${DOWS[df.getDay()]})`
+    :`${df.getMonth()+1}월 ${df.getDate()}일 ~ ${dt.getMonth()+1}월 ${dt.getDate()}일`;
+  const body=document.getElementById('m-body');body.innerHTML='';
+  const actions=document.getElementById('m-actions');actions.innerHTML='';
+  if(ev.content){const d=document.createElement('div');d.className='mdesc';d.textContent=ev.content;body.appendChild(d);}
+  if(!isUni&&ev.note){const n=document.createElement('div');n.className='mnote';n.textContent='비고: '+ev.note;body.appendChild(n);}
+  if(isUni){
+    body.appendChild(Object.assign(document.createElement('hr'),{className:'mdivider'}));
+    const info=applied.get(ev.id);
+    const isApp=info&&!info.cancelled, isCan=info&&info.cancelled;
+    if(isApp){
+      const box=document.createElement('div');box.className='info-box';
+      box.innerHTML=`<div><div class="ik">학번</div><div class="iv">${info.studentId}</div></div><div><div class="ik">이름</div><div class="iv">${info.name}</div></div>`;
+      body.appendChild(box);
+      const cb=mkBtn('신청 취소','btn btn-danger btn-sm',()=>{info.cancelled=true;info.cancelledAt=today2();closeModal();buildCal();});
+      actions.appendChild(cb);
+    } else if(isCan){
+      const n=document.createElement('div');n.style.cssText='font-size:12px;color:#DC2626;margin-bottom:4px';n.textContent='취소된 신청입니다.';body.appendChild(n);
+    } else {
+      body.insertAdjacentHTML('beforeend',`
+        <div><label class="fl">학번</label><input class="fi" id="inp-sid" placeholder="예) 20240001" maxlength="20"><div class="ferr" id="err-sid">학번을 입력하세요</div></div>
+        <div><label class="fl">이름</label><input class="fi" id="inp-nm" placeholder="이름 입력" maxlength="20"><div class="ferr" id="err-nm">이름을 입력하세요</div></div>`);
+      const ab=mkBtn('신청하기','btn btn-primary btn-sm',()=>{
+        const sid=document.getElementById('inp-sid').value.trim();
+        const nm=document.getElementById('inp-nm').value.trim(); let ok=true;
+        if(!sid){show('err-sid');err('inp-sid');ok=false;}else{hide('err-sid');noerr('inp-sid');}
+        if(!nm){show('err-nm');err('inp-nm');ok=false;}else{hide('err-nm');noerr('inp-nm');}
+        if(!ok)return;
+        applied.set(ev.id,{studentId:sid,name:nm,appliedAt:today2(),cancelled:false,cancelledAt:null});
+        closeModal();buildCal();
+      });
+      actions.appendChild(ab);
+    }
+  }
+  actions.appendChild(mkBtn('닫기','btn btn-sm',closeModal));
+  document.getElementById('overlay').style.display='flex';
+}
+
+function openDayModal(ds,evs){
+  const d=new Date(ds+'T00:00:00');
+  document.getElementById('m-cat').innerHTML='';
+  document.getElementById('m-title').textContent=`${d.getMonth()+1}월 ${d.getDate()}일 일정`;
+  document.getElementById('m-date').textContent=`총 ${evs.length}개`;
+  const body=document.getElementById('m-body');body.innerHTML='';
+  evs.forEach(ev=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);gap:8px;cursor:pointer';
+    row.onclick=()=>{closeModal();setTimeout(()=>openModal(ev),80);};
+    const badge=ev.cat==='uni'
+      ?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--c-uni-bg);color:var(--c-uni);flex-shrink:0;white-space:nowrap;font-weight:600">대학설명회</span>`
+      :`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--c-school-bg);color:var(--c-school);flex-shrink:0;white-space:nowrap;font-weight:600">${ev.category||'학교행사'}</span>`;
+    const left=document.createElement('div');left.style='min-width:0;flex:1';
+    left.innerHTML=`<div style="display:flex;align-items:center;gap:7px">${badge}<span style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ev.title}</span></div>`;
+    const arr=document.createElement('span');arr.style='font-size:16px;color:var(--text3);flex-shrink:0';arr.textContent='›';
+    row.appendChild(left);row.appendChild(arr);body.appendChild(row);
+  });
+  const actions=document.getElementById('m-actions');actions.innerHTML='';
+  actions.appendChild(mkBtn('닫기','btn btn-sm',closeModal));
+  document.getElementById('overlay').style.display='flex';
+}
+
+function closeModal(){document.getElementById('overlay').style.display='none';}
+function closeOverlay(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+// ════════════════════════════════
+//  신청현황
+// ════════════════════════════════
+function goApply(){
+  if(isTeacher){showPage('pg-apply');renderApply();}
+  else{showPage('pg-sresult');renderStuResult();}
+}
+
+function renderApply(){
+  const active=UNI.filter(e=>{const i=applied.get(e.id);return i&&!i.cancelled;});
+  document.getElementById('st-t').textContent=UNI.length;
+  document.getElementById('st-a').textContent=active.length;
+  document.getElementById('st-r').textContent=UNI.length-active.length;
+  const al=document.getElementById('all-list');al.innerHTML='';
+  UNI.forEach(ev=>{
+    const info=applied.get(ev.id),isApp=info&&!info.cancelled;
+    const d=new Date(ev.date+'T00:00:00');
+    al.appendChild(mkCard(`대학설명회(${ev.name})`,`${d.getMonth()+1}월 ${d.getDate()}일 · ${ev.time}`,
+      isApp?'btn btn-danger btn-sm':'btn btn-primary btn-sm',isApp?'신청 취소':'신청하기',()=>{
+        if(isApp){info.cancelled=true;info.cancelledAt=today2();renderApply();buildCal();}
+        else{showPage('pg-cal');const mo=new Date(ev.date+'T00:00:00').getMonth()+1;if(curMonth!==mo){curMonth=mo;buildCal();}
+          setTimeout(()=>openModal({...ev,cat:'uni',chipLabel:'대학설명회('+ev.name+')',dateFrom:ev.date,dateTo:ev.date,
+            title:'대학설명회('+ev.name+')',content:ev.note+(ev.period?'\n교시: '+ev.period:'')+(ev.time?'\n시간: '+ev.time:''),category:'대학설명회'}),80);}
+      }));
+  });
+  const appList=document.getElementById('app-list');appList.innerHTML='';
+  if(!active.length){appList.innerHTML='<div class="empty-state">신청된 설명회가 없습니다.</div>';}
+  else active.forEach(ev=>{
+    const info=applied.get(ev.id),d=new Date(ev.date+'T00:00:00');
+    appList.appendChild(mkCard(`대학설명회(${ev.name})`,
+      `${d.getMonth()+1}월 ${d.getDate()}일 · ${ev.time} · ${info.studentId} ${info.name}`,
+      'btn btn-danger btn-sm','신청 취소',()=>{info.cancelled=true;info.cancelledAt=today2();renderApply();buildCal();}));
+  });
+  renderResultCards(document.getElementById('res-list'),true);
+}
+
+function renderStuResult(){renderResultCards(document.getElementById('stu-res-list'),false);}
+
+function renderResultCards(container,isT){
+  container.innerHTML='';
+  const list=UNI.filter(e=>applied.has(e.id));
+  if(!list.length){container.innerHTML='<div class="empty-state">신청 내역이 없습니다.<br>달력에서 대학 설명회를 신청해 보세요.</div>';return;}
+  list.forEach(ev=>{
+    const info=applied.get(ev.id),d=new Date(ev.date+'T00:00:00');
+    const card=document.createElement('div');card.className='rcard'+(info.cancelled?' cancelled':'');
+    const sb=info.cancelled?`<span class="sb-cancel">✕ 취소됨</span>`:`<span class="sb-ok">✓ 신청 완료</span>`;
+    card.innerHTML=`
+      <div class="rh"><div><div class="rn">대학설명회(${ev.name})</div><div class="rnum">신청번호 #${ev.id.replace('u','').padStart(4,'0')}</div></div>${sb}</div>
+      <div class="rmeta">
+        <div class="mr"><span class="mk">날짜</span><span class="mv">2026. ${d.getMonth()+1}. ${d.getDate()}. (${DOWS[d.getDay()]})</span></div>
+        <div class="mr"><span class="mk">시간</span><span class="mv">${ev.time}</span></div>
+        <div class="mr"><span class="mk">교시</span><span class="mv">${ev.period||'—'}</span></div>
+        <div class="mr"><span class="mk">장소</span><span class="mv">${ev.note}</span></div>
+      </div>
+      <hr class="rdiv">
+      <div class="aprow">
+        <div class="api"><span class="apk">학번</span><span class="apv">${info.studentId}</span></div>
+        <div class="api"><span class="apk">이름</span><span class="apv">${info.name}</span></div>
+        <div class="api"><span class="apk">신청일</span><span class="apv">${info.appliedAt}</span></div>
+        ${info.cancelled&&info.cancelledAt?`<div class="api"><span class="apk">취소일</span><span class="apv">${info.cancelledAt}</span></div>`:''}
+      </div>`;
+    if(isT){
+      const rca=document.createElement('div');rca.className='rca';
+      if(info.cancelled){
+        rca.appendChild(mkBtn('복원','btn btn-sm',()=>{info.cancelled=false;info.cancelledAt=null;renderApply();buildCal();}));
+        rca.appendChild(mkBtn('삭제','btn btn-danger btn-sm',()=>{applied.delete(ev.id);renderApply();buildCal();}));
+      }else{
+        const cb=mkBtn('신청 취소','btn btn-sm',()=>{info.cancelled=true;info.cancelledAt=today2();renderApply();buildCal();});
+        cb.style.color='#DC2626'; rca.appendChild(cb);
+      }
+      card.appendChild(rca);
+    }
+    container.appendChild(card);
+  });
+}
+
+function mkCard(name,time,btnCls,btnTxt,cb){
+  const card=document.createElement('div');card.className='acard';
+  const left=document.createElement('div');left.className='ai';
+  left.innerHTML=`<div class="an">${name}</div><div class="at">${time}</div>`;
+  card.appendChild(left);
+  card.appendChild(mkBtn(btnTxt,btnCls+'',cb));
+  return card;
+}
+
+// ════════════════════════════════
+//  역할 / PIN
+// ════════════════════════════════
+function handleRole(){if(isTeacher){isTeacher=false;updateRoleUI();}else openPin(()=>{isTeacher=true;updateRoleUI();});}
+function updateRoleUI(){
+  const pill=document.getElementById('role-pill'),txt=document.getElementById('role-txt');
+  if(isTeacher){pill.classList.add('teacher');txt.textContent='교사 모드';}
+  else{pill.classList.remove('teacher');txt.textContent='학생 모드';}
+}
+function openPin(cb){pinBuf='';pinCb=cb;updDots();document.getElementById('perr').textContent='';document.getElementById('pin-overlay').style.display='flex';}
+function closePinModal(){document.getElementById('pin-overlay').style.display='none';pinBuf='';}
+function closePinOverlay(e){if(e.target===document.getElementById('pin-overlay'))closePinModal();}
+function updDots(){for(let i=0;i<4;i++)document.getElementById('p'+i).className='pd'+(i<pinBuf.length?' on':'');}
+function pk(k){if(pinBuf.length>=4)return;pinBuf+=k;updDots();if(pinBuf.length===4){if(pinBuf===PIN){closePinModal();if(pinCb)pinCb();}else{document.getElementById('perr').textContent='비밀번호가 올바르지 않습니다.';setTimeout(()=>{pinBuf='';updDots();document.getElementById('perr').textContent='';},800);}}}
+function pdel(){if(pinBuf.length>0){pinBuf=pinBuf.slice(0,-1);updDots();}}
+
+// ════════════════════════════════
+//  페이지 / 탭
+// ════════════════════════════════
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function switchTab(btn,id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');['tl','ta','tr'].forEach(t=>{document.getElementById(t).style.display=t===id?'block':'none';});}
+
+// ════════════════════════════════
+//  유틸
+// ════════════════════════════════
+function p2(n){return String(n).padStart(2,'0');}
+function fmt(d){return `${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`;}
+function today2(){const n=new Date();return `${n.getFullYear()}.${n.getMonth()+1}.${n.getDate()}`;}
+function mkBtn(txt,cls,cb){const b=document.createElement('button');b.className=cls;b.textContent=txt;b.onclick=cb;b.style.flexShrink='0';return b;}
+function show(id){document.getElementById(id).style.display='block';}
+function hide(id){document.getElementById(id).style.display='none';}
+function err(id){document.getElementById(id).classList.add('err');}
+function noerr(id){document.getElementById(id).classList.remove('err');}
+
+// ════════════════════════════════
+//  초기화
+// ════════════════════════════════
+buildCal();
+loadSheet();
+</script>
+</body>
+</html>
