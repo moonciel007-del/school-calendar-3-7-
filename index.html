@@ -240,7 +240,8 @@ html,body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(-
 // ════════════════════════════════
 //  설정 - 필요시 수정하세요
 // ════════════════════════════════
-const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRu3W0OaM2zuf1Tn5C5Ep6VJO9AmVNvU0KuulWF3rvapBySv-HixmoHdO9gy6zwkVvCnY2nRDnBz01m/pub?output=csv';
+// ▼ Apps Script 배포 후 여기에 웹앱 URL 붙여넣기
+const SHEET_API = 'https://script.google.com/macros/s/AKfycbyD4MlZZg0FBPcCK7l_k8dEYJzmfGO-_Cnd7uKtaN0XGTM_qIVGZWXwAZ1dLrmtl0d7/exec';
 const PIN = '1234';  // ← 비밀번호 변경 가능
 
 // ════════════════════════════════
@@ -326,27 +327,24 @@ function toCat(gu){
 //  구글 시트 로드
 // ════════════════════════════════
 async function loadSheet(){
+  if(!SHEET_API||SHEET_API.includes('여기에')){
+    setSt('Apps Script URL을 설정해 주세요','err');
+    buildCal(); return;
+  }
   setSt('불러오는 중…','loading');
   try{
-    const res=await fetch(SHEET_CSV);
+    const res=await fetch(SHEET_API);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const text=await res.text();
-    if(text.includes('<html')) throw new Error('시트가 비공개입니다');
-    const rows=parseCSV(text);
-    const start=(rows[0]&&!toISO(rows[0][0]))?1:0;
-    sheetEvs=[];
-    for(let i=start;i<rows.length;i++){
-      const r=rows[i];
-      if(!r[0]||!r[1]) continue;
-      const range=parseDateRange(r[0]);
-      if(!range) continue;
-      sheetEvs.push({
-        id:'sh'+i, dateFrom:range.from, dateTo:range.to,
-        title:(r[1]||'').trim(), content:(r[2]||'').trim(),
-        category:(r[3]||'').trim(), note:(r[4]||'').trim(),
-        cat:toCat(r[3]), chipLabel:(r[1]||'').trim(),
-      });
-    }
+    const data=await res.json();
+    if(!data.success) throw new Error(data.error||'데이터 오류');
+    sheetEvs=data.events.map(e=>({
+      id:'sh'+e.id,
+      dateFrom:e.dateFrom, dateTo:e.dateTo,
+      title:e.title, content:e.content,
+      category:e.category, note:e.note,
+      cat:toCat(e.category),
+      chipLabel:e.title,
+    }));
     setSt(`✓ 학사일정 ${sheetEvs.length}개 연결됨`,'ok');
     buildCal();
   }catch(e){
