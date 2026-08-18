@@ -106,7 +106,7 @@
     <div class="days" id="days"><div class="state">달력을 불러오는 중입니다…</div></div>
   </div>
 
-  <div class="foot">교사가 시트 &lt;입력&gt; 탭을 수정하면 이 달력에도 자동 반영됩니다.</div>
+  <div class="foot">교사가 시트 &lt;일정&gt; 탭을 수정하면 이 달력에도 자동 반영됩니다.</div>
 </div>
 
 <div class="ov" id="ov">
@@ -123,7 +123,7 @@
 /* ===================== 설정 ===================== */
 const CONFIG = {
   SHEET_ID:  "12ZYq08gqaEqgjriBpjGoMJBwV01WgPjRC2lt1bjLjTw",
-  SHEET_NAME:"입력",     // 월/일/내용 입력 시트 이름
+  SHEET_NAME:"일정",     // 월/일/내용 입력 시트 이름
   START_YEAR:2026,       // 8~12월 → 이 연도
   NEXT_YEAR: 2027        // 1~7월  → 다음 연도
 };
@@ -199,7 +199,7 @@ async function loadData(){
     document.getElementById("days").innerHTML =
       '<div class="state">시트를 아직 불러올 수 없어요.<br><br>'+
       '구글 시트에서 <b>공유 → 링크가 있는 모든 사용자 &ldquo;뷰어&rdquo;</b> 로 바꾸거나,<br>'+
-      '<b>파일 → 공유 → 웹에 게시</b> 로 &lt;입력&gt; 탭을 게시하면 표시됩니다.<br>'+
+      '<b>파일 → 공유 → 웹에 게시</b> 로 &lt;일정&gt; 탭을 게시하면 표시됩니다.<br>'+
       '<br><code>'+String(err.message||err)+'</code></div>';
     render(true);
   }
