@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>한국 영화 명대사 퀴즈 마스터</title>
+<style>
+  :root{--bg:#070b14;--p1:#0b1220;--p2:#0f192d;--line:#1b2a44;--text:#e8eefc;--sub:#8396b8;--amber:#ffb300;--ok:#10d9a0;--no:#fb7185;--purple:#5b3df5}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);padding:16px;
+    font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',Pretendard,'Noto Sans KR',sans-serif;line-height:1.5}
+  .app{max-width:1060px;margin:0 auto;display:grid;gap:16px}
+  button{font-family:inherit;cursor:pointer}
+  .hidden{display:none!important}
+  .panel{background:var(--p1);border:1px solid var(--line);border-radius:18px}
+
+  /* 상단 바 */
+  .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 18px;border-radius:14px}
+  .top .t{font-weight:800;font-size:16px}.top .s{color:var(--sub);font-size:12px;margin-left:10px}
+  .chip{background:var(--p2);color:#ffd45c;border:1px solid rgba(255,179,0,.35);border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700}
+
+  /* 문제 카드 */
+  .q{padding:22px}
+  .qh{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .qb{border:1px solid rgba(255,179,0,.5);background:rgba(255,179,0,.1);color:var(--amber);font-weight:900;letter-spacing:1px;padding:8px 14px;border-radius:10px;font-size:15px}
+  .lv{border:1px solid;border-radius:99px;padding:3px 12px;font-size:12px;font-weight:800}
+  .lv.easy{color:#34d399;border-color:#059669;background:rgba(5,150,105,.15)}
+  .lv.medium{color:#fde047;border-color:#a16207;background:rgba(161,98,7,.2)}
+  .lv.hard{color:#fca5a5;border-color:#b91c1c;background:rgba(185,28,28,.2)}
+  .pts{color:var(--sub);font-size:12px}
+  .nav{margin-left:auto;display:flex;align-items:center;gap:10px;color:#7aa2ff;font-size:12px}
+  .nb{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--p2);color:#fff;font-size:18px}
+  .nb:disabled{opacity:.3;cursor:default}
+
+  .stagebox{margin:18px 0 0;border:1px solid var(--line);border-radius:16px;background:var(--p2);padding:24px 18px;text-align:center}
+  .tag{display:inline-flex;gap:8px;align-items:center;border:1px solid rgba(255,179,0,.4);background:rgba(255,179,0,.08);color:var(--amber);
+    border-radius:99px;padding:6px 16px;font-size:12px;font-weight:800}
+  .tag.ok{color:var(--ok);border-color:rgba(16,217,160,.5);background:rgba(16,217,160,.08)}
+  .blind{margin:18px auto 0;max-width:760px;border:1px solid var(--line);border-radius:14px;background:var(--p1);padding:26px 18px}
+  .blind h3{margin:0 0 8px;font-size:21px}
+  .blind p{margin:4px 0;color:#b8c5e0;font-size:14px}
+  .blind small{color:#5f7298;font-size:11px}
+  .peek{margin-top:14px;background:var(--p2);color:#aab8d6;border:1px solid var(--line);border-radius:8px;padding:8px 16px;font-size:12px}
+  .quote{font-size:clamp(21px,3.4vw,34px);font-weight:800;color:#fef08a;word-break:keep-all;line-height:1.5;margin:18px auto 6px;max-width:820px}
+  .scene{color:#b8c5e0;font-size:14px;max-width:760px;margin:0 auto}
+  .ans{font-size:clamp(28px,4.4vw,48px);font-weight:900;color:var(--ok);margin:16px 0 2px}
+  .ansmeta{color:#b8c5e0;font-size:15px}
+
+  .tts{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:20px;align-items:center}
+  .tbtn{background:var(--amber);color:#1c1200;border:0;border-radius:12px;padding:15px 26px;font-size:16px;font-weight:900}
+  .speed{display:flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--p1);border-radius:12px;padding:7px 10px;font-size:12px;color:var(--sub)}
+  .speed button{border:0;background:transparent;color:#cbd5f0;padding:6px 10px;border-radius:7px;font-size:12px;font-weight:700}
+  .speed button.on{background:var(--amber);color:#1c1200}
+
+  /* 하단 2열 */
+  .grid{display:grid;grid-template-columns:minmax(240px,1fr) minmax(300px,1.5fr);gap:16px;margin-top:18px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .box{border:1px solid var(--line);border-radius:16px;background:var(--p1);padding:18px}
+  .timer{text-align:center}
+  .timer .h{color:#cbd5f0;font-size:13px;font-weight:700}
+  .clock{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:64px;font-weight:900;color:var(--amber);margin:8px 0 12px;letter-spacing:2px}
+  .clock.end{color:var(--no)}
+  .trow{display:flex;gap:8px}
+  .tgo{flex:1;background:var(--purple);color:#fff;border:0;border-radius:10px;padding:12px;font-weight:800;font-size:14px}
+  .trs{width:44px;border:1px solid var(--line);background:var(--p2);color:#fff;border-radius:10px;font-size:18px}
+  .hh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px;font-weight:800}
+  .hh .r{color:var(--no);font-size:11px;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700}
+  .hint{border:1px solid var(--line);border-radius:10px;background:var(--p2);padding:11px 14px;font-size:13px;color:#d3dcf2}
+  .hint div+div{margin-top:6px}
+  .hint b{color:#fff}
+  .clip{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .sh{background:#7f1d1d;color:#fecaca;border-radius:6px;padding:3px 9px;font-size:11px;font-weight:900}
+  .clip span.t{font-size:12px;color:var(--sub)}
+  .clip .sp{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .cp{border:1px solid var(--line);background:var(--p2);color:#cbd5f0;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700}
+  .yt{background:#e11d48;color:#fff;text-decoration:none;border-radius:9px;padding:8px 14px;font-size:12px;font-weight:900;display:inline-block}
+  .hint-off{color:var(--sub);font-size:12px;text-align:center;padding:14px}
+
+  .reveal{width:100%;margin-top:18px;border:0;border-radius:14px;padding:16px;font-size:18px;font-weight:900;background:linear-gradient(90deg,#10b981,#06b6d4);color:#032b25}
+  .reveal.next{background:linear-gradient(90deg,var(--amber),#ff8a00);color:#1c1200}
+
+  /* 스코어보드 */
+  .sb{padding:18px}
+  .sbh{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;font-weight:800}
+  .sbb{border:1px solid var(--line);background:var(--p2);color:#cbd5f0;border-radius:9px;padding:8px 14px;font-size:13px;font-weight:700}
+  .teams{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+  .team{background:var(--p2);border:2px solid transparent;border-radius:14px;padding:12px}
+  .team.got{border-color:var(--ok)}
+  .nm{width:100%;background:transparent;border:0;border-bottom:1px dashed #3a4d73;color:var(--text);font-size:14px;font-weight:800;padding:2px 0;font-family:inherit}
+  .sc{font-size:40px;font-weight:900;color:var(--amber);margin:6px 0}
+  .row{display:flex;gap:6px;flex-wrap:wrap}
+  .mini{border:1px solid #3a4d73;background:var(--p1);color:var(--text);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:800}
+  .mini.on{background:var(--ok);border-color:var(--ok);color:#032b25}
+  .mini:disabled{opacity:.3;cursor:default}
+  .mini.x{color:var(--no)}
+  .dots{display:flex;gap:3px;margin-top:8px;flex-wrap:wrap}
+  .dot{width:14px;height:14px;border-radius:4px;background:#27385c;font-size:9px;line-height:14px;text-align:center;color:#0b1220}
+  .dot.c{background:var(--ok)}
+  .help{color:var(--sub);font-size:12px;margin-top:10px}
+
+  /* 결과/표 */
+  h2{margin:0;color:var(--amber);font-size:28px}
+  .rank{display:grid;gap:10px;margin-top:16px}
+  .rk{display:flex;align-items:center;gap:14px;background:var(--p2);border-radius:14px;padding:14px 18px;font-size:19px;font-weight:800;border:2px solid transparent}
+  .rk.first{border-color:var(--amber)}
+  .rk .n{font-size:28px;width:44px}.rk .s{margin-left:auto;color:var(--amber);font-size:26px}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}
+  .tbl th,.tbl td{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}
+  .tbl th{color:var(--sub)}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111c33;border:1px solid var(--line);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}
+  .toast.on{opacity:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="panel top">
+    <div><span class="t">🎬 한국 영화 명대사 퀴즈 마스터</span><span class="s">15~20분 진행 | 총 10문제 | 문제당 10점 (총 100점)</span></div>
+    <button class="chip" id="listBtn">📋 10문제 전체 표</button>
+  </div>
+
+  <div id="main" class="panel q"></div>
+
+  <div class="panel sb">
+    <div class="sbh"><span>🏆 팀별 실시간 스코어보드</span><button class="sbb" id="addTeam">＋ 팀 추가</button></div>
+    <div class="teams" id="teams"></div>
+    <div class="help">정답을 확인한 뒤 팀의 <b>⭕ 정답</b>을 누르면 +10점 (다시 누르면 취소). 팀 이름은 눌러서 바꿀 수 있어요.</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const Q=[
+ {lv:'easy',lvT:'쉬움',quote:'"어이가 없네? 지금 내 기분이 그래. 어이가 없네?"',scene:'본사 집무실에서 밀린 임금을 요구하는 화물 기사와 어린 아들 앞에서, 차가운 미소로 던지는 대사',ans:'베테랑',year:2015,who:'조태오 (유아인)',h:['류승완 감독 연출, 1341만 관객 동원','황정민의 "내가 죄짓고 살지 말라 그랬지?"와 맞서는 재벌 3세 빌런의 대표 대사'],sec:'약 30초',url:'https://www.youtube.com/shorts/kk8IMh-2gUI'},
+ {lv:'easy',lvT:'쉬움',quote:'"지금까지 이런 맛은 없었다. 이것은 갈비인가 통닭인가. 예~ 수원왕갈비통닭입니다."',scene:'잠복 수사를 위해 위장 창업한 치킨집에 주문 전화가 쏟아지자 받는 전화 멘트',ans:'극한직업',year:2019,who:'고반장 (류승룡)',h:['이병헌 감독 연출, 1600만 관객을 넘긴 코미디','마약반 형사들이 잠복하려고 인수한 치킨집이 대박 나는 이야기'],sec:'약 42초',url:'https://www.youtube.com/shorts/W5gvINKgJ0A'},
+ {lv:'easy',lvT:'쉬움',quote:'"거 죽기 딱 좋은 날씨네. 갈 땐 가더라도 담배 한 대 정도는 괜찮잖아? 응?"',scene:'아파트 옥상에서 조직원들을 마주하며 마지막 라이터를 켜는 장면',ans:'신세계',year:2013,who:'이중구 (박성웅)',h:['박훈정 감독 연출 느와르, 이정재·최민식·황정민 출연','경찰 언더커버가 조직 후계 다툼에 휘말리는 이야기'],sec:'약 58초',url:'https://www.youtube.com/shorts/y1yjzJaEaRQ'},
+ {lv:'easy',lvT:'쉬움',quote:'"나 이대 나온 여자야! 내가 어떻게 그런 델 들어가겠어?"',scene:'도박 단속에 걸려 파출소로 연행되는 와중에도 자존심을 굽히지 않는 장면',ans:'타짜',year:2006,who:'정마담 (김혜수)',h:['최동훈 감독 연출, 허영만 만화가 원작','화투판 도박 세계, 주인공 이름은 "고니"'],sec:'약 16초',url:'https://www.youtube.com/shorts/LmQ3THx5NrU'},
+ {lv:'medium',lvT:'보통',quote:'"아버지, 내 약속 잘 지켰지예... 이만하면 내 잘 살았지예... 근데예, 진짜 힘들었거든예..."',scene:'흥남철수부터 파독 광부, 베트남 전쟁까지 가족을 위해 버텨 온 주인공이 돌아가신 아버지 사진 앞에서 오열하는 장면',ans:'국제시장',year:2014,who:'윤덕수 (황정민)',h:['윤제균 감독 연출, 1400만 관객을 넘긴 영화','한국 현대사를 온몸으로 버틴 아버지 세대의 이야기'],sec:'약 38초',url:'https://www.youtube.com/shorts/8Mhg2RkRZU4'},
+ {lv:'medium',lvT:'보통',quote:'"수안아, 아빠 원래 이런 사람 아니야... 석우야, 우리 성경이... 부탁한다! 빨리 가!"',scene:'감염자 떼가 밀려드는 기차 문을 온몸으로 막으며 가족을 피신시키는 장면',ans:'부산행',year:2016,who:'윤상화 (마동석)',h:['연상호 감독 연출, 칸 영화제 초청작','고속열차 안에서 벌어지는 좀비 재난 영화, 공유 주연'],sec:'약 60초',url:'https://www.youtube.com/shorts/C7aKKBo4myo'},
+ {lv:'medium',lvT:'보통',quote:'"내가 인마! 느그 서장이랑 인마! 어저께도! 같이 밥 묵고! 사우나도 가고! 다 했어!"',scene:'파출소에 끌려와 모욕을 당하자 자신의 인맥을 과시하며 으름장을 놓는 장면',ans:'범죄와의 전쟁: 나쁜놈들 전성시대',year:2012,who:'최익현 (최민식)',h:['윤종빈 감독 연출, 1980~90년대 부산이 배경','세관 공무원이 조직 보스(하정우)와 손잡고 성장하는 이야기'],sec:'약 17초',url:'https://www.youtube.com/shorts/dL5B9NIKtCc'},
+ {lv:'medium',lvT:'보통',quote:'"대한민국 헌법 제1조 2항! 대한민국의 주권은 국민에게 있고, 모든 권력은 국민으로부터 나온다! 국가란 국민입니다!"',scene:'용공 조작 사건 법정에서 재판관과 검사를 향해 외치는 최후 진술',ans:'변호인',year:2013,who:'송우석 (송강호)',h:['양우석 감독 연출, 1981년 부림 사건을 모티브로 한 영화','돈 잘 버는 세무 변호사가 인권 변호사로 변해 가는 이야기'],sec:'약 58초',url:'https://www.youtube.com/shorts/EJXiBj3YoP0'},
+ {lv:'hard',lvT:'도전',quote:'"내 눈이 멀어 뵈는 게 없으니 세상이 한판 놀이판이요! 다음 생에도 난 다시 광대로 태어나련다!"',scene:'눈을 잃은 광대가 궁궐 뜰 위 높은 외줄 위에서 마지막 재주를 넘기 전 인생을 노래하는 순간',ans:'왕의 남자',year:2005,who:'장생 (감우성)',h:['이준익 감독 연출, 1200만 관객을 넘긴 사극','연산군 시대, 궁중에 들어온 광대패 이야기 (공길 열풍)'],sec:'약 52초',url:'https://www.youtube.com/shorts/u7OlOC26XjE'},
+ {lv:'hard',lvT:'도전',quote:'"아들아, 너는 다 계획이 있구나! 제일 완벽한 계획이 뭔지 알아? 무계획이야."',scene:'폭우로 반지하 집이 물에 잠겨 체육관 바닥에 누운 아버지가 아들에게 담담하게 털어놓는 대사',ans:'기생충',year:2019,who:'기택 (송강호)',h:['봉준호 감독 연출, 칸 황금종려상·아카데미 작품상 수상','반지하 가족이 부잣집에 하나둘 취업하며 벌어지는 이야기'],sec:'약 23초',url:'https://www.youtube.com/shorts/4AJZWH4W2NM'}
+];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+
+let idx=0, revealed=false, peek=false, hintsOn=true, speed=1, mode='quiz'; // quiz | finished | list
+let left=10, tid=null, running=false;
+let teams=[{id:1,name:'1팀 (천만관객)',score:0,k:{}},{id:2,name:'2팀 (충무로)',score:0,k:{}},{id:3,name:'3팀 (골든글로브)',score:0,k:{}},{id:4,name:'4팀 (오스카)',score:0,k:{}}];
+let nextId=5;
+
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');setTimeout(()=>t.classList.remove('on'),1600);}
+function stopTimer(){clearInterval(tid);tid=null;running=false;}
+function resetTimer(){stopTimer();left=10;paintClock();const b=$('tgo');if(b)b.textContent='10초 카운트다운 시작';}
+function paintClock(){const c=$('clock');if(!c)return;c.textContent='00:'+pad(left);c.classList.toggle('end',left<=0);}
+function startTimer(){
+  if(running){resetTimer();return;}
+  left=10;paintClock();running=true;$('tgo').textContent='⏸ 정지';
+  tid=setInterval(()=>{left--;paintClock();if(left<=0){stopTimer();$('tgo').textContent='10초 카운트다운 시작';beep();}},1000);
+}
+function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)();const o=a.createOscillator();o.frequency.value=880;o.connect(a.destination);o.start();setTimeout(()=>{o.stop();a.close();},350);}catch(e){}}
+function speak(){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(Q[idx].quote.replace(/["“”]/g,''));
+    u.lang='ko-KR';u.rate=speed;
+    const v=speechSynthesis.getVoices().find(v=>/^ko/i.test(v.lang));if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){toast('이 기기에서는 음성 재생을 지원하지 않아요');}
+}
+
+function render(){
+  stopTimer();left=10;
+  if(mode==='list') return renderList();
+  if(mode==='finished'){renderFinal();renderTeams();return;}
+  const q=Q[idx];
+  const inner = revealed
+   ? `<span class="tag ok">✅ 정답 공개</span>
+      <div class="quote">${esc(q.quote)}</div><div class="scene">🎞 ${esc(q.scene)}</div>
+      <div class="ans">《${esc(q.ans)}》</div><div class="ansmeta">${esc(q.who)} · ${q.year}년</div>`
+   : `<span class="tag">🎧 문제 진행 중 (대사 블라인드)</span>
+      <div class="blind">${peek
+        ? `<div class="quote" style="margin-top:0">${esc(q.quote)}</div><div class="scene">🎞 ${esc(q.scene)}</div>`
+        : `<h3>🔒 대사가 블라인드 처리되어 있습니다</h3>
+           <p>아래 <b style="color:var(--amber)">"음성 듣기(TTS)"</b> 버튼을 눌러 소리로 듣거나 사회자의 낭독을 들으세요!</p>
+           <small>(하단의 '정답 확인'을 누르면 영화 제목과 공식 쇼츠 링크가 열립니다)</small>`}
+        <div><button class="peek" id="peek">${peek?'🙈 다시 가리기':'👁 사회자만 대사 살짝 확인'}</button></div>
+      </div>`;
+  $('main').innerHTML=`
+    <div class="qh">
+      <span class="qb">QUESTION ${idx+1} / ${Q.length}</span>
+      <span class="lv ${q.lv}">난이도: ${q.lvT}</span><span class="pts">10점 배점</span>
+      <div class="nav"><button class="nb" id="prev" ${idx===0?'disabled':''}>‹</button><span>${idx+1} / ${Q.length}</span><button class="nb" id="next" ${idx===Q.length-1?'disabled':''}>›</button></div>
+    </div>
+    <div class="stagebox">${inner}
+      <div class="tts"><button class="tbtn" id="tts">🔊 명대사 음성 듣기 (TTS 재생)</button>
+        <div class="speed">속도: ${[['느림',0.7],['보통',1],['빠름',1.3]].map(([n,v])=>`<button data-sp="${v}" class="${speed===v?'on':''}">${n}</button>`).join('')}</div></div>
+    </div>
+    <div class="grid">
+      <div class="box timer"><div class="h">⏱ 팀별 10초 상의 타이머</div><div class="clock" id="clock">00:10</div>
+        <div class="trow"><button class="tgo" id="tgo">10초 카운트다운 시작</button><button class="trs" id="trs" title="초기화">↺</button></div></div>
+      <div class="box">
+        <div class="hh"><span>💡 사회자 힌트 가이드</span><span class="r">⚡ 쇼츠(Shorts) 클립: ${q.sec}</span></div>
+        ${hintsOn?`<div class="hint"><div><b>힌트 1:</b> ${esc(q.h[0])}</div><div><b>힌트 2:</b> ${esc(q.h[1])}</div></div>`:`<div class="hint-off">힌트가 가려져 있어요</div>`}
+        <div class="clip"><span class="sh">Shorts</span><span class="t">명장면 영상 (${q.sec})</span>
+          <div class="sp"><button class="cp" id="hh">${hintsOn?'🙈 힌트 가리기':'👁 힌트 보기'}</button><button class="cp" id="cp">📎 링크 복사</button>
+          <a class="yt" href="${q.url}" target="_blank" rel="noopener noreferrer">새 탭에서 쇼츠 바로보기 ▶</a></div></div>
+      </div>
+    </div>
+    <button class="reveal ${revealed?'next':''}" id="rev">${revealed?(idx===Q.length-1?'🏁 최종 결과 보기':'다음 문제 →'):'👀 정답 확인'}</button>`;
+  $('prev').onclick=()=>go(idx-1);$('next').onclick=()=>go(idx+1);
+  if($('peek'))$('peek').onclick=()=>{peek=!peek;render();};
+  $('tts').onclick=speak;
+  document.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>{speed=+b.dataset.sp;render();});
+  $('tgo').onclick=startTimer;$('trs').onclick=resetTimer;
+  $('hh').onclick=()=>{hintsOn=!hintsOn;render();};
+  $('cp').onclick=()=>{
+    const done=()=>toast('링크를 복사했어요');
+    try{navigator.clipboard.writeText(q.url).then(done,()=>fallback());}catch(e){fallback();}
+    function fallback(){const t=document.createElement('textarea');t.value=q.url;document.body.appendChild(t);t.select();try{document.execCommand('copy');done();}catch(e){toast(q.url);}t.remove();}
+  };
+  $('rev').onclick=()=>{
+    if(!revealed){revealed=true;render();}
+    else if(idx<Q.length-1)go(idx+1);
+    else{mode='finished';render();}
+  };
+  renderTeams();
+}
+function go(i){if(i<0||i>=Q.length)return;speechSynthesis&&speechSynthesis.cancel&&speechSynthesis.cancel();idx=i;revealed=false;peek=false;render();}
+
+function renderFinal(){
+  const s=[...teams].sort((a,b)=>b.score-a.score),top=s[0].score,m=['🥇','🥈','🥉'];
+  $('main').innerHTML=`<h2>🏆 최종 결과</h2><div style="color:var(--sub);margin-top:2px">총 ${Q.length}문제 · 만점 ${Q.length*10}점</div>
+   <div class="rank">${s.map((t,i)=>`<div class="rk ${t.score===top&&top>0?'first':''}"><span class="n">${m[i]||i+1}</span><span>${esc(t.name)}</span><span class="s">${t.score}점</span></div>`).join('')}</div>
+   <button class="reveal next" id="again">↺ 처음부터 다시 (점수 초기화)</button>`;
+  $('again').onclick=()=>{if(!confirm('점수를 모두 0점으로 되돌리고 처음부터 시작할까요?'))return;teams.forEach(t=>{t.score=0;t.k={};});idx=0;revealed=false;peek=false;mode='quiz';render();};
+}
+function renderList(){
+  $('main').innerHTML=`<h2 style="font-size:22px">📋 10문제 전체 표 (교사용 · 정답 포함)</h2>
+   <table class="tbl"><tr><th>No</th><th>난이도</th><th>대사</th><th>정답</th><th>배우/배역</th><th>쇼츠</th></tr>
+   ${Q.map((q,i)=>`<tr><td>Q${i+1}</td><td>${q.lvT}</td><td>${esc(q.quote)}</td><td><b>${esc(q.ans)}</b> (${q.year})</td><td>${esc(q.who)}</td><td><a style="color:#fb7185" href="${q.url}" target="_blank" rel="noopener noreferrer">${q.sec}</a></td></tr>`).join('')}</table>`;
+}
+$('listBtn').onclick=()=>{
+  if(mode==='list'){mode='quiz';$('listBtn').textContent='📋 10문제 전체 표';}
+  else{mode='list';$('listBtn').textContent='← 퀴즈로 돌아가기';}
+  render();
+};
+
+function renderTeams(){
+  const on=revealed&&mode==='quiz';
+  $('teams').innerHTML=teams.map(t=>`<div class="team ${on&&t.k[idx]?'got':''}" data-id="${t.id}">
+    <input class="nm" value="${esc(t.name)}" data-a="name"><div class="sc">${t.score}</div>
+    <div class="row"><button class="mini ${t.k[idx]?'on':''}" data-a="tog" ${on?'':'disabled'}>⭕ 정답</button>
+      <button class="mini" data-a="p5">+5</button><button class="mini" data-a="m5">−5</button>
+      ${teams.length>2?'<button class="mini x" data-a="del">✕</button>':''}</div>
+    <div class="dots">${Q.map((_,i)=>`<span class="dot ${t.k[i]?'c':''}">${i+1}</span>`).join('')}</div></div>`).join('');
+}
+$('teams').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const t=teams.find(x=>x.id==b.closest('.team').dataset.id);if(!t)return;
+  const a=b.dataset.a;
+  if(a==='tog'){const on=!t.k[idx];t.k[idx]=on;t.score=Math.max(0,t.score+(on?10:-10));}
+  if(a==='p5')t.score+=5;if(a==='m5')t.score=Math.max(0,t.score-5);
+  if(a==='del')teams=teams.filter(x=>x!==t);
+  renderTeams();if(mode==='finished')renderFinal();
+});
+$('teams').addEventListener('change',e=>{
+  if(e.target.dataset.a!=='name')return;
+  const t=teams.find(x=>x.id==e.target.closest('.team').dataset.id);t.name=e.target.value||'팀';
+  if(mode==='finished')renderFinal();
+});
+$('addTeam').onclick=()=>{if(teams.length>=8)return;teams.push({id:nextId++,name:(teams.length+1)+'팀',score:0,k:{}});renderTeams();};
+try{speechSynthesis.getVoices();}catch(e){}
+render();
+</script>
+</body>
+</html>
